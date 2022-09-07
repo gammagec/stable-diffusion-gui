@@ -7,42 +7,48 @@ from src.common.namespace import Namespace
 from resizeimage import resizeimage
 from PIL import Image
 import matplotlib.image
+import os
+import yaml
 
-out_path = 'D:/development/faceswap/videos/scarface2/img'
-cap = cv2.VideoCapture('D:/development/faceswap/videos/scarface2/scarface.mp4')
+config_path = os.path.join(".", "swap_config.yaml")
+if not os.path.exists(config_path):
+	print("No swap_config.yaml file found")
+	exit()
+
+config_file = open(config_path)		
+config = yaml.load(config_file, Loader=yaml.UnsafeLoader)			
+
+out_path = config.out_dir
+cap = cv2.VideoCapture(config.video_in)
 
 frame_size = (
 	int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
 	int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 	)
-fps = 12
-mode = "mediapipe"
-write_pics = False
-frame_skip = 2 # iterations
-show_preview = False
-half = True
-skip_frames = 4500 # starting frame
-stop_after = 0
-include_originals = False
-expand_up = 20
-expand = 20
-all_faces = True
+fps = config.fps
+mode = config.mode
+write_pics = config.write_pics
+frame_skip = config.frame_skip
+show_preview = config.show_preview
+half = config.half
+skip_frames = config.skip_frames
+stop_after = config.stop_after
+include_originals = config.include_originals
+expand_up = config.expand_up
+expand = config.expand
+all_faces = config.all_faces
 
 if not write_pics:
 	print(f"creating video with size {frame_size} and frame rate {fps}")	
 	out_vid = cv2.VideoWriter(f'{out_path}/out.mp4',
 		cv2.VideoWriter_fourcc(*'XVID'), fps, frame_size)
 
-model = load_model(
-	'C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/stable-diffusion/v1-inference.yaml', 
-	'C:/Users/gamma/Documents/development/stable-diffusion-gui/models/ldm/stable-diffusion-v1/model.ckpt', 
-	[], half = half)
+model = load_model(config.config, config.ckpt_loc, [], half = half)
 print("model loaded")
 
 class CascadeFaceDetect:
 	def __init__(self):
-		self.faceCascade = cv2.CascadeClassifier(
-			'D:/development/stable-diffusion-gui/swap_test/haarcascade_frontalface_default.xml')
+		self.faceCascade = cv2.CascadeClassifier(config.face_cascade)
 
 	def get_faces(self, frame):		
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -57,9 +63,9 @@ class CascadeFaceDetect:
 class DeepCaffeFaceDetect:
 	def __init__(self):
 		self.dnn_model = cv2.dnn.readNetFromCaffe(
-			prototxt="C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/swap/deploy.prototxt.txt", 
-			caffeModel="C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/swap/res10_300x300_ssd_iter_140000_fp16.caffemodel")
-		self.min_confidence = 0.3
+			prototxt=config.deep_caffe_prototxt, 
+			caffeModel=config.deep_caffe_model)
+		self.min_confidence = config.deep_caffe_confidence
 
 	def get_faces(self, frame):
 		image_height, image_width, _ = frame.shape
@@ -85,8 +91,8 @@ class DeepCaffeFaceDetect:
 class DlibFaceDetect:
 	def __init__(self):
 		self.detector = dlib.cnn_face_detection_model_v1(
-			'C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/swap/mmod_human_face_detector.dat')
-		self.new_width = 600
+			config.dlib_detector)
+		self.new_width = 600 # scales the input image to this widget
 
 	def get_faces(self, frame):
 		height, width, _ = frame.shape
@@ -194,7 +200,8 @@ while (cap.isOpened()):
 			im_np = numpy.asarray(im_pil)		
 			if show_preview:
 				cv2.imshow('Face', im_np)
-			output_image = run_img(model, im_pil, "arnold schwarzenegger", steps = 50, scale = 7.5, strength = 0.4, half = half)			
+			output_image = run_img(model, im_pil, config.prompt, 
+				steps = config.steps, scale = config.scale, strength = config.strength, half = half)			
 			output_back = resizeimage.resize_crop(
 				resizeimage.resize_width(output_image, w), 
 				[w, h])
@@ -219,6 +226,7 @@ while (cap.isOpened()):
 		break
 
 	# define q as the exit button
+	# only with 'show_preview' enabled
 	if cv2.waitKey(25) & 0xFF == ord('q'):
 		break
  

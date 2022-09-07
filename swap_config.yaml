@@ -1,0 +1,55 @@
+!!python/object:__main__.Namespace
+ckpt_loc: models/ldm/stable-diffusion-v1/model.ckpt
+config: configs/stable-diffusion/v1-inference.yaml
+out_dir: D:/development/faceswap/videos/scarface2/img
+video_in: D:/development/faceswap/videos/scarface2/scarface.mp4
+face_cascade: D:/development/stable-diffusion-gui/swap_test/haarcascade_frontalface_default.xml
+
+# don't bother with any of these other face detect modes, not as good as mediapipe
+deep_caffe_prototxt: C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/swap/deploy.prototxt.txt
+deep_caffe_model: C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/swap/res10_300x300_ssd_iter_140000_fp16.caffemodel
+deep_caffe_confidence: 0.3
+dlib_detector: C:/Users/gamma/Documents/development/stable-diffusion-gui/configs/swap/mmod_human_face_detector.dat
+
+fps: 12
+# other options are cascade, deep, and dlib, but don't bother!
+mode: 'mediapipe'
+
+prompt: "arnold schwarzenegger"
+steps: 50
+scale: 7.5
+strength: 0.4
+
+# write images instead of video
+write_pics: true
+
+# How often to capture a frame
+# 1 does every frame in the video
+# 100 would only render every 100th frame
+frame_skip: 1000
+
+# only if you have tkinter 
+show_preview: false
+
+# Use half precision on the model
+half: true
+
+# The starting frame to render from
+skip_frames: 0
+
+# Max number of frames to render. 0 renders them all
+stop_after: 0
+
+# Pastes the original face to the right of the modified one
+include_originals: false
+
+# how far to expand above the detected face box
+# right now it needs to be the same as expand, or causes black lines
+# (it's a bug... )
+expand_up: 20
+# How far to expand the face box to the left, right and down
+expand: 20
+
+# This swaps all faces in the image for every frame
+# (right now it's gonna do that either way)
+all_faces: true
