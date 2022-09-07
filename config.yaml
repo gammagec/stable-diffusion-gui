@@ -1,0 +1,8 @@
+!!python/object:__main__.Namespace
+ckpt_loc: models/ldm/stable-diffusion-v1/model.ckpt
+config: configs/stable-diffusion/v1-inference.yaml
+out_dir: output
+
+embeddings:  
+  #- token: '*'
+  #  file: D:/development/textual_inversion/logs/myface3_sd/checkpoints/embeddings.pt  

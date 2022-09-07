@@ -1,0 +1,10 @@
+
+latent_diffusion.egg-info/**
+**/__pycache__
+*.sublime-project
+*.sublime-workspace
+src/clip/
+src/taming-transformers/
+configs/swap/*.caffemodel
+configs/swap/*.prototxt.txt
+models/ldm/stable-diffusion-v1/model.ckpt
