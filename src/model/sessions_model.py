@@ -1,6 +1,8 @@
 import os
+import shutil
 
 from src.common.subject import Subject
+from src.common.value_subject import ValueSubject
 
 class SessionsModel:
 	name = 'sessions_model'
@@ -8,20 +10,19 @@ class SessionsModel:
 	def __init__(self, app_context):								
 		self.config = app_context.config
 		self.message_service = app_context.message_service
-		self.session_names = []
-		self.sessions_path = ''		
-		self.update_sessions_subject = Subject('update_sessions')		
+		self.session_names = ValueSubject('session-names', [])
+		self.sessions_path = ''				
 		self.selection_model = app_context.selection_model
 
 	def load(self):
 		print(f'loading sessions from {self.config.out_dir}')
-		self.session_names = []		
+		session_names = []		
 		self.sessions_path = os.path.join(self.config.out_dir, "sessions")				
 		if os.path.exists(self.sessions_path) and os.path.isdir(self.sessions_path):
 			for f in os.scandir(self.sessions_path):
 				if f.is_dir():	
-					self.session_names.append(f.name)
-		self.update_sessions_subject.dispatch()
+					session_names.append(f.name)
+		self.session_names.set_value(session_names)
 
 	def set_session(self, session):
 		print(f'set session: {session}')		
@@ -33,8 +34,9 @@ class SessionsModel:
 			self.message_service.error(f'session {name} already exists')
 			return
 		os.makedirs(session_path, exist_ok = False)
-		self.session_names.append(name)
-		self.update_sessions_subject.dispatch()
+		session_names = self.session_names.get_value()
+		session_names.append(name)
+		self.session_names.set_value(session_names)
 
 	def get_selected_session_image_count(self):
 		name = self.selection_model.selected_session.get_value()

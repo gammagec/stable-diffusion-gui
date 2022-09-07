@@ -9,9 +9,8 @@ from src.ui.view import View
 class ParamsView(View):
 	name = 'params_view'
 
-	def __init__(self, parent, model, view_model):
+	def __init__(self, parent, view_model):
 		super().__init__(parent)
-		self.model = model		
 		self.view_model = view_model
 
 	def create(self):

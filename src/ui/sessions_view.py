@@ -1,47 +1,49 @@
-from tkinter import Frame, Label, Button, X, END, simpledialog
+from tkinter import Frame, Label, Button, X, END, simpledialog, messagebox, LEFT
 
 from src.ui.list_box import create_list_box
+from src.ui.view import View
 
-class SessionsView:
+class SessionsView(View):
 	name = 'session_view'
 	
-	def __init__(self, parent, model):
-		self.model = model
-		self.frame = Frame(parent)
-		label = Label(self.frame, text = "Sessions")
+	def __init__(self, parent, view_model):
+		super().__init__(parent)
+		self.view_model = view_model	
+		view_model.set_view(self)			
+
+	def create(self):
+		super().create()
+		frame = super().get_frame()
+		label = Label(frame, text = "Sessions")
 		label.pack()
-		self.sessions_list = create_list_box(self.frame, lambda evt: self.on_session_select(evt))
+		self.sessions_list = create_list_box(frame, 			
+			lambda evt: self.view_model.on_session_clicked(self.sessions_list.get(self.sessions_list.curselection())),
+			listvariable = self.view_model.list_items)
 		self.sessions_list.pack(fill = X)
-		new_button = Button(self.frame, text = "+", command = lambda: self.on_new_session())
-		new_button.pack()
-		delete_button = Button(self.frame, text = "-", command = lambda: self.on_delete_session())
-		delete_button.pack()
-		self.frame.pack()			
-		model.update_sessions_subject.register(self, lambda: self.update_sessions())
 
-	def update_sessions(self):
-		print('updating sessions')
-		self.sessions_list.delete(0, END)
-		for name in self.model.session_names:
-			self.sessions_list.insert(END, name)
+		button_frame = Frame(frame)
+		new_button = Button(button_frame, text = "+", 
+			command = lambda: self.view_model.on_new_session_clicked())
+		new_button.pack(side = LEFT)
+		delete_button = Button(button_frame, text = "-", 
+			command = lambda: self.view_model.on_delete_session_clicked())
+		delete_button.pack(side = LEFT)					
+		button_frame.pack()
 
-	def on_session_select(self, evt):
-		session = self.sessions_list.get(self.sessions_list.curselection())		
-		self.model.set_session(session)
+	def get_new_session_name(self):
+		return simpledialog.askstring("Input", "New session name?", parent = self.frame)
 
-	def on_new_session(self):
-		answer = simpledialog.askstring("Input", "New session name?", parent = self.frame)
-		self.model.create_session(answer)
-		self.sessions_list.select_set(END)
-		self.sessions_list.event_generate('<<ListboxSelect>>')
-
-	def on_delete_session(self):
-		if (self.model.get_selected_session_image_count() > 0):
-			answer = messagebox.askyesno(
+	def confirm_session_delete(self):
+		return messagebox.askyesno(
 				"Confirmation", 
 				"There are runs in this session, are you sure you want to delete it?", 
 				parent = self.frame)
-			if answer:
-				self.model.delete_selected_session()
-		else:
-			self.model.delete_selected_session()
+
+	def select_last(self):
+		self.clear_selection()
+		self.sessions_list.selection_set(END)
+		self.sessions_list.event_generate('<<ListboxSelect>>')
+
+	def clear_selection(self):
+		self.sessions_list.selection_clear(0, END)
+		self.sessions_list.event_generate('<<ListboxSelect>>')

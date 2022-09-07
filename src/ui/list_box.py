@@ -1,7 +1,7 @@
 from tkinter import Listbox, SINGLE, END
 
-def create_list_box(parent, select_command):
-	listbox = Listbox(parent, selectmode = SINGLE, exportselection = 0)
+def create_list_box(parent, select_command, listvariable = None):
+	listbox = Listbox(parent, selectmode = SINGLE, exportselection = 0, listvariable = listvariable)
 	listbox.bind('<<ListboxSelect>>', select_command)
 
 	def on_arrow_up(evt):
