@@ -166,68 +166,31 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
-    
 
     def forward(self, x, context=None, mask=None):
-        # Only when half precision
-        optimize = True
-        
         h = self.heads
 
         q = self.to_q(x)
         context = default(context, x)
         k = self.to_k(context)
         v = self.to_v(context)
-        del context, x
 
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
-        if optimize:
-            r1 = torch.zeros(q.shape[0], q.shape[1], v.shape[2], device=q.device)
-        else:
-            sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+        sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
 
-        if not optimize and exists(mask):
+        if exists(mask):
             mask = rearrange(mask, 'b ... -> b (...)')
             max_neg_value = -torch.finfo(sim.dtype).max
             mask = repeat(mask, 'b j -> (b h) () j', h=h)
             sim.masked_fill_(~mask, max_neg_value)
-        else:
-            stats = torch.cuda.memory_stats(q.device)
-            mem_total = torch.cuda.get_device_properties(0).total_memory
-            mem_active = stats['active_bytes.all.current']
-            mem_free = mem_total - mem_active
 
-        if not optimize:
-            # attention, what we cannot get enough of
-            attn = sim.softmax(dim=-1)
-            out = einsum('b i j, b j d -> b i d', attn, v)
-            out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-            return self.to_out(out)
-        else:
-            mem_required = q.shape[0] * q.shape[1] * k.shape[1] * 4 * 2.5
-            steps = 1
+        # attention, what we cannot get enough of
+        attn = sim.softmax(dim=-1)
 
-            if mem_required > mem_free:
-                steps = 2**(math.ceil(math.log(mem_required / mem_free, 2)))
-
-            slice_size = q.shape[1] // steps if (q.shape[1] % steps) == 0 else q.shape[1]
-            for i in range(0, q.shape[1], slice_size):
-                end = i + slice_size
-                s1 = einsum('b i d, b j d -> b i j', q[:, i:end], k)
-                s1 *= self.scale
-
-                s2 = s1.softmax(dim=-1)
-                del s1
-
-                r1[:, i:end] = einsum('b i j, b j d -> b i d', s2, v)
-                del s2
-
-
-            r2 = rearrange(r1, '(b h) n d -> b n (h d)', h=h)
-            del r1
-
-            return self.to_out(r2)        
+        out = einsum('b i j, b j d -> b i d', attn, v)
+        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        return self.to_out(out)
 
 
 class BasicTransformerBlock(nn.Module):
