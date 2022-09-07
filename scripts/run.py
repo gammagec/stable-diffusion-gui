@@ -51,8 +51,9 @@ def create_embedder(embeddings):
 		string_to_token_dict[placeholder] = get_clip_token_for_string(embedder.tokenizer, placeholder)					
 		string_to_param_dict[placeholder] = manager.string_to_param_dict['*']
 	
-	for embedding in embeddings:
-		create_embedding(embedding['file'], embedding['token'])
+	if embeddings != None:
+		for embedding in embeddings:
+			create_embedding(embedding['file'], embedding['token'])
 	
 	embedder = EmbeddingManagerPartial()
 	embedder.string_to_param_dict = string_to_param_dict
