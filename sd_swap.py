@@ -236,7 +236,8 @@ def main():
 			if not write_pics:					
 				out_vid.write(frame)
 			elif write_pics_no_face_frames:
-				Image.fromarray(original_image).save(f'{out_path}/out_{count}.png')
+				original_np = cv2.cvtColor(original_image, cv2.COLOR_RGB2BGR)			
+				matplotlib.image.imsave(f'{out_path}/out_{count}.png', original_np)										
 
 
 		if stop_after > 0 and num > stop_after:
