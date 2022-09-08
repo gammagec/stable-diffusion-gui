@@ -7,7 +7,7 @@ from src.common.namespace import Namespace
 from resizeimage import resizeimage
 from PIL import Image
 import matplotlib.image
-import os
+import os, argparse
 import yaml
 
 def main():
