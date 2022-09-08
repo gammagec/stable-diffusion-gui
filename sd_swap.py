@@ -13,15 +13,15 @@ import yaml
 def main():
 	parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "--config",
-        type=str,
-        nargs="?",
-        default="swap_config.yaml",
-        help="the config file to use"
-    )
+	parser.add_argument(
+		"--config",
+		type=str,
+		nargs="?",
+		default="swap_config.yaml",
+		help="the config file to use"
+	)
 
-    opt = parser.parse_args()
+	opt = parser.parse_args()
 
 	config_path = os.path.join(".", opt.config)
 	if not os.path.exists(config_path):
@@ -256,4 +256,4 @@ def main():
 	cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main()
+	main()
