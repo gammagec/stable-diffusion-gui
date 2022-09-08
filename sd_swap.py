@@ -37,13 +37,14 @@ include_originals = config.include_originals
 expand_up = config.expand_up
 expand = config.expand
 all_faces = config.all_faces
+write_pics_no_face_frames = config.write_pics_no_face_frames
 
 if not write_pics:
 	print(f"creating video with size {frame_size} and frame rate {fps}")	
 	out_vid = cv2.VideoWriter(f'{out_path}/out.mp4',
 		cv2.VideoWriter_fourcc(*'XVID'), fps, frame_size)
 
-model = load_model(config.config, config.ckpt_loc, [], half = half)
+model = load_model(config.config, config.ckpt_loc, config.embeddings, half = half)
 print("model loaded")
 
 class CascadeFaceDetect:
@@ -218,9 +219,12 @@ while (cap.isOpened()):
 			matplotlib.image.imsave(f'{out_path}/out_{count}.png', original_np)						
 		else:
 			out_vid.write(original_np)		
-	else:
+	else:		
 		if not write_pics:					
 			out_vid.write(frame)
+		elif write_pics_no_face_frames:
+			original_image.save(f'{out_path}/out_{count}.png')
+
 
 	if stop_after > 0 and num > stop_after:
 		break
